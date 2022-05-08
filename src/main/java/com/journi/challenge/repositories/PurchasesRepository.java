@@ -34,9 +34,11 @@ public class PurchasesRepository {
 
         List<Purchase> recentPurchases = allPurchases
                 .stream()
-                .filter(p -> p.getTimestamp().isAfter(start))
-                .sorted(Comparator.comparing(Purchase::getTimestamp))
-                .collect(Collectors.toList());
+                .filter(p -> p.getTimestamp().isAfter(start)).collect(Collectors.toList());
+
+
+//                .sorted(Comparator.comparing(Purchase::getTimestamp))
+//                .collect(Collectors.toList());
 
         long countPurchases = recentPurchases.size();
         double totalAmountPurchases = recentPurchases.stream().mapToDouble(Purchase::getTotalValue).sum();
@@ -45,9 +47,9 @@ public class PurchasesRepository {
                 formatter.format(recentPurchases.get(recentPurchases.size() - 1).getTimestamp()),
                 countPurchases,
                 totalAmountPurchases,
-                totalAmountPurchases / countPurchases,
+                totalAmountPurchases / (countPurchases == 0L ? 1L : countPurchases),
                 recentPurchases.stream().mapToDouble(Purchase::getTotalValue).min().orElse(0.0),
-                recentPurchases.stream().mapToDouble(Purchase::getTotalValue).min().orElse(0.0)
+                recentPurchases.stream().mapToDouble(Purchase::getTotalValue).max().orElse(0.0)
         );
     }
 }

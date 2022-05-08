@@ -50,4 +50,8 @@ public class CurrencyConverter {
         return eurValue * currencyEurRate.getOrDefault(currencyCode, 1.0);
     }
 
+    public String extractCurrencyFromCurrencyCode(String currencyCode) {
+        return supportedCountriesCurrency.entrySet().stream().filter(e -> e.getValue().equals(currencyCode)).map(Map.Entry::getKey).findFirst().orElse(null);
+    }
+
 }

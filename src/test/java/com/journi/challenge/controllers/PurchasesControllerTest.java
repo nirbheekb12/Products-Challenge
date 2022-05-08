@@ -3,6 +3,7 @@ package com.journi.challenge.controllers;
 import com.journi.challenge.models.Purchase;
 import com.journi.challenge.models.PurchaseStats;
 import com.journi.challenge.repositories.PurchasesRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.Locale;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -29,6 +31,8 @@ class PurchasesControllerTest {
     private PurchasesController purchasesController;
     @Autowired
     private PurchasesRepository purchasesRepository;
+
+
 
     private String getPurchaseJson(String invoiceNumber, String customerName, String dateTime, Double totalValue, String currencyCode, String... productIds) {
         String productIdList = "[\"" + String.join("\",\"", productIds) + "\"]";
@@ -49,6 +53,22 @@ class PurchasesControllerTest {
         assertEquals(25.34, savedPurchase.getTotalValue());
     }
 
+    @Test
+    @DisplayName(value = "Purchase Input having any null value, should fail with 400")
+    public void testPurchaseCurrencyCodeHavingNullValues() throws Exception {
+        String body = getPurchaseJson("1", null, "2020-01-01T10:00:00+01:00", null, "EUR", "product1");
+        mockMvc.perform(post("/purchases")
+                .contentType(MediaType.APPLICATION_JSON).content(body)
+        ).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    public void testPurchaseCurrencyCodeHavingInvalidCurrencyCode() throws Exception {
+        String body = getPurchaseJson("1", "customer 1", "2020-01-01T10:00:00+01:00", 25.34, "asfasfasfas", "product1");
+        mockMvc.perform(post("/purchases")
+                .contentType(MediaType.APPLICATION_JSON).content(body)
+        ).andExpect(status().is4xxClientError());
+    }
 
     @Test
     public void testPurchaseStatistics() {
