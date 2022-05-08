@@ -19,6 +19,6 @@ public class ProductsController {
 
     @GetMapping("/products")
     public List<Product> list(@RequestParam(name = "countryCode", defaultValue = "AT") String countryCode) {
-        return productsRepository.list();
+        return productsRepository.getProductsByCurrencyCode(countryCode);
     }
 }
