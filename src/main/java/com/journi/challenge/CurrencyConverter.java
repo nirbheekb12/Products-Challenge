@@ -3,7 +3,10 @@ package com.journi.challenge;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.json.JacksonJsonParser;
+import org.springframework.stereotype.Component;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
 import java.io.File;
 import java.io.FileReader;
 import java.net.URL;
@@ -12,6 +15,8 @@ import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Named
+@Singleton
 public class CurrencyConverter {
     private final Map<String, String> supportedCountriesCurrency;
     private final Map<String, Double> currencyEurRate;
@@ -50,8 +55,17 @@ public class CurrencyConverter {
         return eurValue * currencyEurRate.getOrDefault(currencyCode, 1.0);
     }
 
+    public Double convertCurrencyToEur(String currencyCode, Double value) {
+        return value / currencyEurRate.getOrDefault(currencyCode, 1.0) ;
+    }
+
     public String extractCurrencyFromCurrencyCode(String currencyCode) {
-        return supportedCountriesCurrency.entrySet().stream().filter(e -> e.getValue().equals(currencyCode)).map(Map.Entry::getKey).findFirst().orElse(null);
+        return supportedCountriesCurrency.
+                entrySet().
+                stream().
+                filter(e -> e.getValue().equals(currencyCode))
+                .map(Map.Entry::getKey)
+                .findFirst().orElse(null);
     }
 
 }

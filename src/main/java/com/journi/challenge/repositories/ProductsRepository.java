@@ -3,6 +3,8 @@ package com.journi.challenge.repositories;
 import com.journi.challenge.CurrencyConverter;
 import com.journi.challenge.models.Product;
 import org.springframework.stereotype.Component;
+
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
@@ -13,7 +15,8 @@ import java.util.stream.Collectors;
 @Singleton
 public class ProductsRepository {
     private List<Product> allProducts = new ArrayList<>();
-    private final CurrencyConverter currencyConverter = new CurrencyConverter();
+    @Inject
+    private CurrencyConverter currencyConverter;
 
     {
         allProducts.add(new Product("photobook-square-soft-cover", "Photobook Square with Soft Cover", 25.0, "EUR"));

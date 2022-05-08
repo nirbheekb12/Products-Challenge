@@ -70,30 +70,45 @@ class PurchasesControllerTest {
         ).andExpect(status().is4xxClientError());
     }
 
+
+    @Test
+    public void testPurchaseCurrencyCodeUS() throws Exception {
+        String body = getPurchaseJson("1", "customer 1", "2020-01-01T10:00:00+01:00", 25.34, "USD", "product1");
+        mockMvc.perform(post("/purchases")
+                .contentType(MediaType.APPLICATION_JSON).content(body)
+        ).andExpect(status().isOk());
+
+        Purchase savedPurchase = purchasesRepository.list().get(purchasesRepository.list().size() - 1);
+        assertEquals("customer 1", savedPurchase.getCustomerName());
+        assertEquals("1", savedPurchase.getInvoiceNumber());
+        assertEquals("2020-01-01T10:00:00", savedPurchase.getTimestamp().format(DateTimeFormatter.ISO_DATE_TIME));
+        assertEquals(22.65129167784035, savedPurchase.getTotalValue());
+    }
+
     @Test
     public void testPurchaseStatistics() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime firstDate = now.minusDays(20);
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE.withZone(ZoneId.of("UTC"));
         // Inside window purchases
-        purchasesRepository.save(new Purchase("1", firstDate, Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(1), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(2), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(3), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(4), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(5), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(6), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(7), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(8), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", firstDate.plusDays(9), Collections.emptyList(), "", 10.0));
+        purchasesRepository.save(new Purchase("1", firstDate, Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(1), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(2), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(3), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(4), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(5), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(6), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(7), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(8), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", firstDate.plusDays(9), Collections.emptyList(), "", 10.0,"EUR"));
 
         // Outside window purchases
-        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", now.minusDays(32), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", now.minusDays(33), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", now.minusDays(34), Collections.emptyList(), "", 10.0));
-        purchasesRepository.save(new Purchase("1", now.minusDays(35), Collections.emptyList(), "", 10.0));
+        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(32), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(33), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(34), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(35), Collections.emptyList(), "", 10.0, "EUR"));
 
         PurchaseStats purchaseStats = purchasesController.getStats();
         assertEquals(formatter.format(firstDate), purchaseStats.getFrom());
@@ -103,5 +118,31 @@ class PurchasesControllerTest {
         assertEquals(10.0, purchaseStats.getAvgAmount());
         assertEquals(10.0, purchaseStats.getMinAmount());
         assertEquals(10.0, purchaseStats.getMaxAmount());
+    }
+
+    @Test
+    @DisplayName(value = "For no records for last 30 days, should returned appropriate response having defaulted values and not fail")
+    public void testPurchaseStatisticsErrorScenario() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime firstDate = now.minusDays(20);
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE.withZone(ZoneId.of("UTC"));
+
+
+        // Outside window purchases
+        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(31), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(32), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(33), Collections.emptyList(), "", 10.0, "EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(34), Collections.emptyList(), "", 10.0,"EUR"));
+        purchasesRepository.save(new Purchase("1", now.minusDays(35), Collections.emptyList(), "", 10.0, "EUR"));
+
+        PurchaseStats purchaseStats = purchasesController.getStats();
+        assertEquals(null, purchaseStats.getFrom());
+        assertEquals(null, purchaseStats.getTo());
+        assertEquals(0, purchaseStats.getCountPurchases());
+        assertEquals(0.0, purchaseStats.getTotalAmount());
+        assertEquals(0.0, purchaseStats.getAvgAmount());
+        assertEquals(0.0, purchaseStats.getMinAmount());
+        assertEquals(0.0, purchaseStats.getMaxAmount());
     }
 }

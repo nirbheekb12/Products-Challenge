@@ -21,7 +21,8 @@ public class PurchasesController {
     @Inject
     private PurchasesRepository purchasesRepository;
 
-    private CurrencyConverter currencyConverter = new CurrencyConverter();
+    @Inject
+    private CurrencyConverter currencyConverter;
 
     @GetMapping("/purchases/statistics")
     public PurchaseStats getStats() {
@@ -42,14 +43,15 @@ public class PurchasesController {
                     LocalDateTime.parse(purchaseRequest.getDateTime(), DateTimeFormatter.ISO_DATE_TIME),
                     purchaseRequest.getProductIds(),
                     purchaseRequest.getCustomerName(),
-                    purchaseRequest.getAmount()
+                    currencyConverter.convertCurrencyToEur(purchaseRequest.getCurrencyCode(),purchaseRequest.getAmount()),
+                    purchaseRequest.getCurrencyCode()
             );
             purchasesRepository.save(newPurchase);
-//            return newPurchase;
-                  return new ResponseEntity<>(new PurchaseResponseDto("200", "Ok. Purchase saved"), HttpStatus.OK);
+            // returning OK ResponseEntity for happy case!
+            return new ResponseEntity<>(new PurchaseResponseDto("200", "Ok. Purchase saved"), HttpStatus.OK);
         }
-//        return null;
 
+        // returning Invalid request for failure case!
         return new ResponseEntity<>(new PurchaseResponseDto("400", "Invalid request"), HttpStatus.BAD_REQUEST);
 
 

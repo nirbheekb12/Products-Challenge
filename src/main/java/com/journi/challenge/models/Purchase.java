@@ -21,12 +21,15 @@ public class Purchase {
     private final String customerName;
     private final Double totalValue;
 
-    public Purchase(String invoiceNumber, LocalDateTime timestamp, List<String> productIds, String customerName, Double totalValue) {
+    private final String currencyCode;
+
+    public Purchase(String invoiceNumber, LocalDateTime timestamp, List<String> productIds, String customerName, Double totalValue, String currencyCode) {
         this.invoiceNumber = invoiceNumber;
         this.timestamp = timestamp;
         this.productIds = productIds;
         this.customerName = customerName;
         this.totalValue = totalValue;
+        this.currencyCode = currencyCode;
     }
 
     public String getInvoiceNumber() {
@@ -47,5 +50,9 @@ public class Purchase {
 
     public Double getTotalValue() {
         return totalValue;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
     }
 }

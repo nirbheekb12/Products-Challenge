@@ -32,24 +32,38 @@ public class PurchasesRepository {
 
         LocalDateTime start = LocalDate.now().atStartOfDay().minusDays(30);
 
+        final Double[] minMaxAndSum = {Double.MAX_VALUE, Double.MIN_VALUE,0.0d};
         List<Purchase> recentPurchases = allPurchases
                 .stream()
-                .filter(p -> p.getTimestamp().isAfter(start)).collect(Collectors.toList());
+                .filter(p -> p.getTimestamp().isAfter(start))
+                .sorted(Comparator.comparing(Purchase::getTimestamp)).
+                collect(Collectors.toList());
 
 
-//                .sorted(Comparator.comparing(Purchase::getTimestamp))
-//                .collect(Collectors.toList());
+        recentPurchases.forEach(purchase -> {
+            Double currentValue = purchase.getTotalValue();
+            minMaxAndSum[0] = Math.min(minMaxAndSum[0], currentValue);
+            minMaxAndSum[1] = Math.max(minMaxAndSum[1], currentValue);
+            minMaxAndSum[2]+=currentValue;
+        });
 
         long countPurchases = recentPurchases.size();
-        double totalAmountPurchases = recentPurchases.stream().mapToDouble(Purchase::getTotalValue).sum();
+        double totalAmountPurchases = minMaxAndSum[2];
+        double minValue = (minMaxAndSum[0] == Double.MAX_VALUE ? 0.0 : minMaxAndSum[0]);
+        double maxValue = (minMaxAndSum[1] == Double.MIN_VALUE ? 0.0 : minMaxAndSum[1]);
+        // It might happen,
+        // that recentPurchases is empty for the last 30 days, so directly accessing list index would fail, now defaults to null for those cases
+        LocalDateTime fromDate = recentPurchases.size() > 0 ?  recentPurchases.get(0).getTimestamp() : null;
+        LocalDateTime toDate =  recentPurchases.size() > 0 ?  recentPurchases.get(recentPurchases.size() - 1).getTimestamp() : null;
         return new PurchaseStats(
-                formatter.format(recentPurchases.get(0).getTimestamp()),
-                formatter.format(recentPurchases.get(recentPurchases.size() - 1).getTimestamp()),
+                Objects.nonNull(fromDate) ? formatter.format(fromDate) : null,
+                Objects.nonNull(toDate) ? formatter.format(toDate) : null,
                 countPurchases,
                 totalAmountPurchases,
+                //countPurchases might be 0, to so avoid divide by Zero error, handled for it here !
                 totalAmountPurchases / (countPurchases == 0L ? 1L : countPurchases),
-                recentPurchases.stream().mapToDouble(Purchase::getTotalValue).min().orElse(0.0),
-                recentPurchases.stream().mapToDouble(Purchase::getTotalValue).max().orElse(0.0)
+                minValue,
+                maxValue
         );
     }
 }
